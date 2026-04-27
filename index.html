@@ -12,9 +12,17 @@
     --ground: #c98a4b;
     --grass: #5fbf3a;
     --grass-dark: #3d8a25;
-    --accent: #ffcc00;
-    --accent-dark: #c89200;
-    --accent-darker: #7a5a00;
+    /* Blue button palette — matches the cyan/steel level tiles */
+    --accent:        #4ea0e8;   /* base blue */
+    --accent-light:  #b8dcf6;   /* highlight */
+    --accent-dark:   #2779be;   /* mid shadow */
+    --accent-darker: #15466e;   /* deep shadow */
+    --accent-text:   #ffffff;   /* button text */
+    --accent-shadow: #0c2a44;   /* text shadow */
+    /* Panel palette */
+    --panel-bg:      rgba(14, 22, 40, 0.92);
+    --panel-border:  #4ea0e8;
+    --panel-glow:    rgba(78, 160, 232, 0.25);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -66,7 +74,7 @@
   .overlay.hidden { display: none; }
 
   .logo {
-    width: min(60vw, 360px);
+    width: min(60vw, 320px);
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     filter: drop-shadow(0 6px 0 rgba(0,0,0,.4));
@@ -77,48 +85,113 @@
     50%     { transform: translateY(-10px) rotate(1.2deg); }
   }
 
-  /* ----- PIXEL ART BUTTON ----- */
-  /* Built from layered box-shadows so every edge is a chunky pixel.
-     No border-radius — just clean blocky rectangles. */
+  /* ===== HERO POSE (main menu) ===== */
+  .hero-stage {
+    position: relative;
+    width: min(260px, 60vw);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin: -6px 0 -2px;     /* tuck up against logo a touch */
+  }
+  .hero-pose {
+    position: relative;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    /* anchor breathing to feet so he doesn't float off the floor */
+    transform-origin: 50% 100%;
+    animation: hero-breathe 3.6s ease-in-out infinite;
+    filter: drop-shadow(4px 6px 0 rgba(0, 10, 30, 0.55));
+    z-index: 2;
+  }
+  /* Soft cyan stage glow behind the hero */
+  .hero-glow {
+    position: absolute;
+    inset: -6% -10% 10% -10%;
+    background: radial-gradient(ellipse at center 65%,
+                                rgba(78, 160, 232, 0.55) 0%,
+                                rgba(78, 160, 232, 0.18) 40%,
+                                transparent 75%);
+    filter: blur(10px);
+    z-index: 1;
+    pointer-events: none;
+    animation: hero-glow-pulse 3.6s ease-in-out infinite;
+  }
+  /* Soft contact shadow under his boots */
+  .hero-floor {
+    position: absolute;
+    bottom: -10px;
+    left: 14%;
+    right: 14%;
+    height: 14px;
+    background: radial-gradient(ellipse at center,
+                                rgba(0,0,0,0.55) 0%,
+                                rgba(0,0,0,0.20) 50%,
+                                transparent 80%);
+    filter: blur(3px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  @keyframes hero-breathe {
+    0%, 100% { transform: scale(1, 1); }
+    45%      { transform: scale(1.012, 1.028); }   /* chest rises, feet planted */
+    55%      { transform: scale(1.012, 1.028); }
+  }
+  @keyframes hero-glow-pulse {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50%      { opacity: 1.00; transform: scale(1.05); }
+  }
+
+  /* Tighter, scrollable layout for the main menu specifically (game-over panel
+     stays centered as before). */
+  #menu.overlay {
+    justify-content: flex-start;
+    padding: 30px 24px 40px;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  /* ----- PIXEL ART BUTTON (blue) ----- */
   .btn-pixel {
     position: relative;
     appearance: none;
     border: none;
     cursor: pointer;
     background: var(--accent);
-    color: #2a1a00;
+    color: var(--accent-text);
     font-family: inherit;
     font-size: 18px;
     letter-spacing: 2px;
     padding: 18px 34px;
     text-transform: uppercase;
     image-rendering: pixelated;
-    /* Pixel-stair border made of box-shadows (clockwise from top) */
     box-shadow:
-      0 -4px 0 0 #fff2a8,                     /* top highlight */
-      0 -8px 0 0 var(--accent-dark),          /* outer top */
-      4px 0 0 0 var(--accent-dark),           /* right */
+      0 -4px 0 0 var(--accent-light),         /* top highlight */
+      0 -8px 0 0 var(--accent-dark),
+      4px 0 0 0 var(--accent-dark),
       8px 0 0 0 var(--accent-darker),
-      0 4px 0 0 var(--accent-dark),           /* bottom step 1 */
-      0 8px 0 0 var(--accent-darker),         /* bottom step 2 */
-      -4px 0 0 0 var(--accent-dark),          /* left */
+      0 4px 0 0 var(--accent-dark),
+      0 8px 0 0 var(--accent-darker),
+      -4px 0 0 0 var(--accent-dark),
       -8px 0 0 0 var(--accent-darker),
-      0 12px 0 0 #000;                        /* drop shadow */
+      0 12px 0 0 #000;
     transition: transform .08s steps(2), box-shadow .08s steps(2);
-    text-shadow: 2px 2px 0 #fff2a8;
+    text-shadow: 2px 2px 0 var(--accent-shadow);
   }
   .btn-pixel::before,
   .btn-pixel::after {
     content: '';
     position: absolute;
-    background: #fff2a8;
     pointer-events: none;
   }
   /* Inner top-left highlight pixels */
   .btn-pixel::before {
     top: 4px; left: 4px;
     width: 14px; height: 4px;
-    box-shadow: 0 4px 0 0 #fff2a8;
+    background: var(--accent-light);
+    box-shadow: 0 4px 0 0 var(--accent-light);
   }
   /* Inner bottom-right shadow pixels */
   .btn-pixel::after {
@@ -131,7 +204,7 @@
   .btn-pixel:active {
     transform: translateY(6px);
     box-shadow:
-      0 -4px 0 0 #fff2a8,
+      0 -4px 0 0 var(--accent-light),
       0 -8px 0 0 var(--accent-dark),
       4px 0 0 0 var(--accent-dark),
       8px 0 0 0 var(--accent-darker),
@@ -145,43 +218,25 @@
   .hint {
     font-size: 11px;
     line-height: 1.7;
-    color: #ffe9a8;
+    color: #b8dcf6;
     text-shadow: 2px 2px 0 #000;
   }
 
   .title-shadow {
-    font-size: 12px;
+    font-size: 11px;
     color: #fff;
     text-shadow: 2px 2px 0 #000;
-    margin-top: -10px;
+    margin-top: -6px;
+    max-width: min(520px, 90vw);
+    line-height: 1.7;
+    text-align: center;
+    letter-spacing: 1px;
   }
 
-  /* HUD — top corners + center logo */
-  #hud {
-    position: absolute;
-    top: 18px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    pointer-events: none;
-    z-index: 5;
-    font-size: 14px;
-    padding: 0 24px;
-    text-shadow: 2px 2px 0 #000, 3px 3px 0 rgba(0,0,0,.4);
-  }
-  #hud.hidden { display: none; }
-  #hud .pill {
-    background: rgba(0,0,0,.45);
-    padding: 10px 16px;
-    border-radius: 4px;
-    border: 3px solid #ffe9a8;
-    box-shadow: 0 4px 0 #000;
-    line-height: 1.3;
-  }
-  #hud .pill .label { font-size: 9px; color: #ffe9a8; display: block; margin-bottom: 4px; letter-spacing: 1px; }
-  #hud .pill .num   { font-size: 18px; color: #fff; }
+  /* HUD — score + coins are now drawn on the canvas; this HUD is unused */
+  #hud, #hud * { display: none !important; }
+
+  /* Lives + score + coins are rendered directly on the canvas */
 
   #hudLogo {
     position: absolute;
@@ -198,7 +253,56 @@
   }
   #hudLogo.hidden { display: none; }
 
-  /* Mute button — pixel chip in the corner */
+  /* MOBILE JUMP BUTTON — only shown in portrait orientation AND while playing */
+  #jumpBtn.hidden { display: none !important; }
+  #jumpBtn {
+    display: none;  /* shown via media query (and only when not .hidden) */
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 30;
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-family: inherit;
+    font-size: 22px;
+    letter-spacing: 3px;
+    padding: 22px 64px;
+    text-transform: uppercase;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    box-shadow:
+      0 -4px 0 0 var(--accent-light),
+      0 -8px 0 0 var(--accent-dark),
+      4px 0 0 0 var(--accent-dark),
+      8px 0 0 0 var(--accent-darker),
+     -4px 0 0 0 var(--accent-dark),
+     -8px 0 0 0 var(--accent-darker),
+      0 4px 0 0 var(--accent-dark),
+      0 8px 0 0 var(--accent-darker),
+      0 12px 0 0 #000;
+    text-shadow: 2px 2px 0 var(--accent-shadow);
+    transition: transform .05s steps(2), box-shadow .05s steps(2);
+  }
+  #jumpBtn.pressed {
+    transform: translateX(-50%) translateY(6px);
+    box-shadow:
+      0 -4px 0 0 var(--accent-light),
+      0 -8px 0 0 var(--accent-dark),
+      4px 0 0 0 var(--accent-dark),
+      8px 0 0 0 var(--accent-darker),
+     -4px 0 0 0 var(--accent-dark),
+     -8px 0 0 0 var(--accent-darker),
+      0 2px 0 0 var(--accent-dark),
+      0 4px 0 0 var(--accent-darker),
+      0 6px 0 0 #000;
+  }
+
+  /* Mute button — minimal blue pixel chip */
   #muteBtn {
     position: absolute;
     bottom: 18px;
@@ -207,13 +311,13 @@
     appearance: none;
     border: none;
     cursor: pointer;
-    background: rgba(0,0,0,.55);
-    color: #ffe9a8;
+    background: rgba(14, 22, 40, 0.75);
+    color: var(--accent-light);
     font-family: inherit;
     font-size: 12px;
     letter-spacing: 1px;
     padding: 10px 14px;
-    border: 3px solid #ffe9a8;
+    border: 3px solid var(--accent);
     box-shadow: 0 4px 0 #000;
     text-shadow: 1px 1px 0 #000;
     transition: transform .08s steps(2);
@@ -225,52 +329,285 @@
     50%     { transform: translateX(-50%) translateY(-4px); }
   }
 
-  /* GAME OVER */
-  .gameover-title {
-    font-size: 32px;
-    color: #ff5050;
-    text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(0,0,0,.4);
-    letter-spacing: 3px;
+  /* ===== GAME OVER PANEL ===== */
+  #gameover .panel {
+    background: var(--panel-bg);
+    border: 4px solid var(--panel-border);
+    box-shadow:
+      0 8px 0 #000,
+      0 0 0 4px var(--panel-glow),
+      0 0 32px var(--panel-glow);
+    padding: 32px 44px 28px;
+    width: min(440px, 90vw);
+    text-align: center;
+    position: relative;
   }
-  .summary-card {
-    background: rgba(0,0,0,.55);
-    border: 4px solid #ffe9a8;
-    box-shadow: 0 6px 0 #000;
-    padding: 22px 32px;
-    display: grid;
-    grid-template-columns: auto auto;
-    gap: 10px 28px;
-    font-size: 14px;
-    color: #fff;
+  /* Bounce-in animation when the panel un-hides */
+  #gameover:not(.hidden) .panel {
+    animation: panel-bounce-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes panel-bounce-in {
+    0%   { transform: translateY(70px) scale(0.7); opacity: 0; }
+    60%  { transform: translateY(-10px) scale(1.05); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  /* Subtle red breathing on the GAME OVER title in the panel */
+  #gameover:not(.hidden) .gameover-title {
+    animation: title-breathe 1.6s ease-in-out infinite;
+  }
+  @keyframes title-breathe {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50%      { transform: scale(1.03); filter: brightness(1.18); }
+  }
+  /* corner pixels for that game-UI feel */
+  #gameover .panel::before,
+  #gameover .panel::after {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    background: var(--accent-light);
+  }
+  #gameover .panel::before { top: -8px; left: -8px; }
+  #gameover .panel::after  { top: -8px; right: -8px; }
+  #gameover .panel-corners-bottom {
+    position: absolute; left: 0; right: 0; bottom: -8px; height: 12px;
+    pointer-events: none;
+  }
+  #gameover .panel-corners-bottom::before,
+  #gameover .panel-corners-bottom::after {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    background: var(--accent-light);
+    bottom: 0;
+  }
+  #gameover .panel-corners-bottom::before { left: -8px; }
+  #gameover .panel-corners-bottom::after  { right: -8px; }
+
+  .gameover-title {
+    font-size: 30px;
+    color: #ff5b6e;
+    text-shadow: 3px 3px 0 #4a0010, 5px 5px 0 #000;
+    letter-spacing: 3px;
+    margin-bottom: 22px;
+  }
+
+  .summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 0 auto 22px;
     text-align: left;
+    font-size: 13px;
     text-shadow: 2px 2px 0 #000;
   }
-  .summary-card .k { color: #ffe9a8; }
-  .summary-card .v { color: #fff; font-size: 16px; }
-  .summary-card .total {
-    grid-column: 1 / -1;
-    margin-top: 10px;
-    padding-top: 12px;
-    border-top: 3px dashed rgba(255,233,168,0.5);
-    text-align: center;
-    font-size: 18px;
-    color: #ffd84a;
+  .summary-rows .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 36px;
+    align-items: baseline;
+    color: var(--accent-light);
+    padding: 4px 4px;
   }
+  .summary-rows .row .v {
+    color: #fff;
+    font-size: 15px;
+  }
+  .summary-rows .row.total {
+    border-top: 3px solid rgba(78, 160, 232, 0.4);
+    padding-top: 12px;
+    margin-top: 6px;
+    color: #ffe27a;
+    font-size: 15px;
+  }
+  .summary-rows .row.total .v {
+    color: #ffd84a;
+    font-size: 22px;
+    text-shadow: 2px 2px 0 #4a3500, 4px 4px 0 #000;
+  }
+
   .end-msg {
     font-size: 12px;
-    color: #ffd84a;
+    color: var(--accent-light);
     text-shadow: 2px 2px 0 #000;
     line-height: 1.6;
+    margin-bottom: 18px;
+  }
+
+  /* ===== SCOREBOARD (main menu) ===== */
+  .scoreboard {
+    background: rgba(14, 22, 40, 0.85);
+    border: 3px solid var(--accent);
+    box-shadow: 0 6px 0 #000, 0 0 0 3px var(--panel-glow);
+    padding: 12px 16px;
+    width: min(360px, 88vw);
+    max-height: 240px;
+    overflow-y: auto;
+    position: relative;
+  }
+  .scoreboard::before, .scoreboard::after {
+    content: ''; position: absolute;
+    width: 8px; height: 8px;
+    background: var(--accent-light);
+    top: -5px;
+  }
+  .scoreboard::before { left: -5px; }
+  .scoreboard::after  { right: -5px; }
+  .sb-title {
+    color: #ffd84a;
+    font-size: 11px;
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .sb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sb-row {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    gap: 10px;
+    align-items: baseline;
+    color: var(--accent-light);
+    text-shadow: 1px 1px 0 #000;
+    padding: 4px 6px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    border-bottom: 1px dashed rgba(78,160,232,0.18);
+  }
+  .sb-row:last-child { border-bottom: none; }
+  .sb-row.sb-rank-1 { color: #ffd84a; font-weight: bold; }
+  .sb-row.sb-rank-2 { color: #d6e7f5; }
+  .sb-row.sb-rank-3 { color: #e0a060; }
+  .sb-rank { color: #b8dcf6; text-align: right; }
+  .sb-name { color: inherit; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+  .sb-score { color: #fff; font-weight: bold; }
+  .sb-row.sb-rank-1 .sb-score { color: #ffd84a; }
+  .sb-empty {
+    text-align: center;
+    color: var(--accent-light);
+    font-size: 10px;
+    padding: 16px;
+    line-height: 1.6;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* ===== HIGH SCORE ENTRY (game over) ===== */
+  .high-score-entry {
+    margin: 4px 0 18px;
+    padding: 14px;
+    background: rgba(255, 216, 74, 0.08);
+    border: 3px solid #ffd84a;
+    box-shadow: 0 4px 0 #000;
+    animation: hs-pulse 1.4s ease-in-out infinite;
+  }
+  .high-score-entry.hidden { display: none; }
+  @keyframes hs-pulse {
+    0%, 100% { box-shadow: 0 4px 0 #000, 0 0 0 0 rgba(255, 216, 74, 0.45); }
+    50%      { box-shadow: 0 4px 0 #000, 0 0 0 10px rgba(255, 216, 74, 0); }
+  }
+  .hs-badge {
+    color: #ffd84a;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 12px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .hs-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  #nicknameInput {
+    flex: 1;
+    padding: 10px 12px;
+    border: 3px solid var(--accent);
+    background: rgba(8, 18, 36, 0.92);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    outline: none;
+    text-align: center;
+    min-width: 0;
+  }
+  #nicknameInput:focus { border-color: #ffd84a; }
+  .hs-row .btn-pixel { padding: 10px 18px; font-size: 12px; }
+
+  /* ===== Game over button row ===== */
+  .button-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .btn-pixel.btn-secondary {
+    background: var(--accent-dark);
+    box-shadow:
+      0 -4px 0 0 var(--accent),
+      0 -8px 0 0 var(--accent-darker),
+      4px 0 0 0 var(--accent-darker),
+      8px 0 0 0 #0a2740,
+      0 4px 0 0 var(--accent-darker),
+      0 8px 0 0 #0a2740,
+      -4px 0 0 0 var(--accent-darker),
+      -8px 0 0 0 #0a2740,
+      0 12px 0 0 #000;
+    font-size: 14px;
+    padding: 14px 22px;
   }
 
   @media (max-width: 600px) {
     .hint { font-size: 10px; }
-    #hud { font-size: 11px; top: 10px; padding: 0 10px; }
-    #hud .pill .num { font-size: 14px; }
     #hudLogo { width: 90px; }
     .gameover-title { font-size: 22px; }
     .btn-pixel { font-size: 14px; padding: 14px 24px; }
-    .summary-card { font-size: 11px; padding: 16px 20px; }
+    #gameover .panel { padding: 22px 24px 20px; }
+    .summary-rows { font-size: 11px; }
+    .summary-rows .row.total .v { font-size: 18px; }
+    .logo { width: min(55vw, 240px); }
+    .hero-stage { width: min(58vw, 200px); }
+    #menu.overlay { gap: 12px; padding: 18px 20px 30px; }
+  }
+
+  /* MOBILE PORTRAIT — show on-screen JUMP button under the game.
+     The stage gets a sky-blue → dark gradient so the area ABOVE the canvas
+     looks like more sky (matching the canvas's top-sky band #7cb6e8) and the
+     area BELOW the canvas blends into the dark void where the JUMP button
+     sits — same vibe as the in-game void below the ground. */
+  @media (orientation: portrait) and (max-width: 900px) {
+    #stage {
+      align-items: flex-start;
+      padding-top: 100px;                   /* push canvas down so sky is visible above */
+      background: linear-gradient(
+        to bottom,
+        #7cb6e8  0%,                        /* matches canvas top sky band */
+        #94c4ec  12%,
+        #1a2b4a  55%,                       /* fade to dark below canvas */
+        #0a0f1f  100%
+      );
+    }
+    canvas {
+      width: 100%;
+      max-height: calc(100vh - 260px);     /* 100 top padding + 160 reserved for JUMP */
+      height: auto;
+    }
+    #jumpBtn { display: inline-block; }
+    #muteBtn { bottom: auto; top: 12px; right: 12px; }
+    .overlay { padding-bottom: 170px; }
+  }
+  @media (orientation: portrait) and (max-width: 900px) and (max-height: 720px) {
+    #stage { padding-top: 70px; }           /* less top padding on shorter phones */
+    #jumpBtn { font-size: 18px; padding: 16px 48px; bottom: 14px; }
+    canvas { max-height: calc(100vh - 210px); }
+    .overlay { padding-bottom: 140px; }
   }
 </style>
 </head>
@@ -281,41 +618,89 @@
     <!-- IN-GAME CENTERED LOGO -->
     <img id="hudLogo" class="hidden" src="logo.png" alt="" />
 
-    <!-- BACKGROUND MUSIC -->
-    <audio id="bgm" src="hardstyle crazy cringe meme, energetic.mp3" loop preload="auto"></audio>
+    <!-- BACKGROUND MUSIC — playlist managed by JS, alternates DANHAM ↔ hardstyle -->
+    <audio id="bgm" preload="auto"></audio>
+
+    <!-- LEVEL-START VOICE CLIP -->
+    <audio id="startSfx" src="GO TJ.mp3" preload="auto"></audio>
+
+    <!-- TOMATO PICKUP VOICE CLIP -->
+    <audio id="tomatoSfx" src="TOMATO.mp3" preload="auto"></audio>
+
+    <!-- ARCTIC JUMP CHARGE FILLED -->
+    <audio id="arcticReadySfx" src="ARCTIC JUMP READY.mp3" preload="auto"></audio>
+
+    <!-- GAME OVER STING -->
+    <audio id="gameOverSfx" src="game over.mp3" preload="auto"></audio>
 
     <!-- MUTE TOGGLE -->
     <button id="muteBtn" type="button">🔊 SOUND ON</button>
 
-    <!-- HUD -->
+    <!-- MOBILE JUMP (portrait only — CSS controls visibility) -->
+    <button id="jumpBtn" class="hidden" type="button" aria-label="Jump">▲ JUMP</button>
+
+    <!-- HUD (lives are drawn on the canvas; SCORE + COINS stack on the right) -->
     <div id="hud" class="hidden">
-      <div class="pill"><span class="label">SCORE</span><span class="num" id="score">0</span></div>
-      <div class="pill"><span class="label">COINS</span><span class="num" id="coins">0</span></div>
+      <div class="hud-col right" style="margin-left:auto;">
+        <div class="pill"><span class="label">SCORE</span><span class="num" id="score">0</span></div>
+        <div class="pill"><span class="label">COINS</span><span class="num" id="coins">0</span></div>
+      </div>
     </div>
 
     <!-- MAIN MENU -->
     <div id="menu" class="overlay">
       <img class="logo" src="logo.png" alt="TJ Suplex Run" />
-      <div class="title-shadow">RUN. JUMP. COLLECT.</div>
+
+      <!-- Hero showcase — TJ in a confident pose, breathing on a glowing stage -->
+      <div class="hero-stage">
+        <span class="hero-glow"></span>
+        <img class="hero-pose" src="hero pose.png" alt="TJ Dunham" />
+        <span class="hero-floor"></span>
+      </div>
+
+      <div class="title-shadow">JOIN TJ DUNHAM AND HIS MUSTACHE ON A MISSION TO MAKE ARC GREAT AGAIN</div>
       <button id="playBtn" class="btn-pixel">▶ PLAY</button>
       <div class="hint">
         SPACE / ↑ / TAP &nbsp;to jump<br/>
         Avoid obstacles &middot; Grab the coins
       </div>
+
+      <!-- Scoreboard -->
+      <div class="scoreboard" id="menuScoreboard">
+        <div class="sb-title">★ HIGH SCORES ★</div>
+        <div class="sb-list" id="scoreboardList">
+          <!-- populated by JS via renderScoreboard() -->
+        </div>
+      </div>
     </div>
 
     <!-- GAME OVER -->
     <div id="gameover" class="overlay hidden">
-      <div class="gameover-title">GAME OVER</div>
-      <div class="summary-card">
-        <span class="k">Distance</span><span class="v" id="finalDistance">0</span>
-        <span class="k">Coins</span><span class="v" id="finalCoins">0</span>
-        <span class="k">Coin Bonus</span><span class="v" id="finalBonus">0</span>
-        <span class="total">TOTAL SCORE: <span id="finalScore">0</span></span>
+      <div class="panel">
+        <div class="gameover-title">GAME OVER</div>
+        <div class="summary-rows">
+          <div class="row"><span>Distance</span><span class="v" id="finalDistance">0</span></div>
+          <div class="row"><span>Coins</span><span class="v" id="finalCoins">0</span></div>
+          <div class="row"><span>Coin Bonus</span><span class="v" id="finalBonus">0</span></div>
+          <div class="row total"><span>TOTAL</span><span class="v" id="finalScore">0</span></div>
+        </div>
+
+        <!-- High score entry — only visible when score qualifies for top 10 -->
+        <div id="highScoreEntry" class="high-score-entry hidden">
+          <div class="hs-badge">★ NEW HIGH SCORE ★</div>
+          <div class="hs-row">
+            <input id="nicknameInput" type="text" maxlength="10" placeholder="ENTER NAME" autocomplete="off" />
+            <button id="saveScoreBtn" class="btn-pixel">SAVE</button>
+          </div>
+        </div>
+
+        <div class="end-msg" id="endMsg">Nice run!</div>
+        <div class="button-row">
+          <button id="menuBtn" class="btn-pixel btn-secondary">★ MENU</button>
+          <button id="retryBtn" class="btn-pixel">↻ RETRY</button>
+        </div>
+        <div class="panel-corners-bottom"></div>
       </div>
-      <div class="end-msg" id="endMsg">Nice run!</div>
-      <button id="retryBtn" class="btn-pixel">↻ RETRY</button>
-      <div class="hint">Press SPACE to play again</div>
     </div>
   </div>
 
