@@ -2699,7 +2699,9 @@
     if (tomatoSfxEl)      tomatoSfxEl.muted      = m;
     if (arcticReadySfxEl) arcticReadySfxEl.muted = m;
     if (gameOverSfxEl)    gameOverSfxEl.muted    = m;
-    muteBtn.textContent = m ? '🔇 SOUND OFF' : '🔊 SOUND ON';
+    muteBtn.textContent = m ? '🔇' : '🔊';
+    muteBtn.classList.toggle('muted', m);
+    muteBtn.setAttribute('aria-label', m ? 'Sound off — tap to enable' : 'Sound on — tap to mute');
     if (m) {
       bgmEl.pause();
       if (startSfxEl)       startSfxEl.pause();

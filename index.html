@@ -310,28 +310,40 @@
       0 6px 0 0 #000;
   }
 
-  /* Mute button — minimal blue pixel chip */
+  /* Mute button — square icon-only chip in the corner */
   #muteBtn {
     position: absolute;
     bottom: 18px;
     right: 18px;
     z-index: 20;
+    width: 48px;
+    height: 48px;
+    padding: 0;
     appearance: none;
-    border: none;
     cursor: pointer;
-    background: rgba(14, 22, 40, 0.75);
+    background: rgba(14, 22, 40, 0.78);
     color: var(--accent-light);
     font-family: inherit;
-    font-size: 12px;
-    letter-spacing: 1px;
-    padding: 10px 14px;
+    font-size: 22px;
+    line-height: 1;
     border: 3px solid var(--accent);
     box-shadow: 0 4px 0 #000;
     text-shadow: 1px 1px 0 #000;
     transition: transform .08s steps(2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
   #muteBtn:hover { transform: translateY(-2px); }
   #muteBtn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; }
+  /* Slightly fade when muted so the OFF state reads at a glance */
+  #muteBtn.muted { background: rgba(14, 22, 40, 0.55); color: rgba(184, 220, 246, 0.55); }
+  /* Tighter on small phones */
+  @media (max-width: 600px) {
+    #muteBtn { width: 42px; height: 42px; font-size: 19px; bottom: 14px; right: 14px; }
+  }
   @keyframes hudbob {
     0%,100% { transform: translateX(-50%) translateY(0); }
     50%     { transform: translateX(-50%) translateY(-4px); }
@@ -647,7 +659,7 @@
     <audio id="gameOverSfx" src="game over.mp3" preload="auto"></audio>
 
     <!-- MUTE TOGGLE -->
-    <button id="muteBtn" type="button">🔊 SOUND ON</button>
+    <button id="muteBtn" type="button" aria-label="Toggle sound">🔊</button>
 
     <!-- MOBILE JUMP (portrait only — CSS controls visibility) -->
     <button id="jumpBtn" class="hidden" type="button" aria-label="Jump">▲ JUMP</button>
