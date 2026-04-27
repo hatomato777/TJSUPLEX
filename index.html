@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>TJ Suplex Run</title>
+<link rel="icon" href="logo.png" />
+<style>
+  :root {
+    --sky-top: #6ec6ff;
+    --sky-bot: #b6e3ff;
+    --ground: #c98a4b;
+    --grass: #5fbf3a;
+    --grass-dark: #3d8a25;
+    --accent: #ffcc00;
+    --accent-dark: #c89200;
+    --accent-darker: #7a5a00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    font-family: "Press Start 2P", "Courier New", monospace;
+    color: #fff;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #stage {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #1a2b4a 0%, #0a0f1f 100%);
+  }
+
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #3a8ee0;  /* matches top sky band — only briefly visible before first paint */
+    box-shadow: 0 0 0 4px #0a0f1f, 0 0 40px rgba(0,0,0,.6);
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+
+  /* OVERLAYS */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    text-align: center;
+    background: rgba(0, 10, 30, 0.55);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+    padding: 24px;
+  }
+  .overlay.hidden { display: none; }
+
+  .logo {
+    width: min(60vw, 360px);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    filter: drop-shadow(0 6px 0 rgba(0,0,0,.4));
+    animation: bob 1.6s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%,100% { transform: translateY(0) rotate(-1.2deg); }
+    50%     { transform: translateY(-10px) rotate(1.2deg); }
+  }
+
+  /* ----- PIXEL ART BUTTON ----- */
+  /* Built from layered box-shadows so every edge is a chunky pixel.
+     No border-radius — just clean blocky rectangles. */
+  .btn-pixel {
+    position: relative;
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    background: var(--accent);
+    color: #2a1a00;
+    font-family: inherit;
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 18px 34px;
+    text-transform: uppercase;
+    image-rendering: pixelated;
+    /* Pixel-stair border made of box-shadows (clockwise from top) */
+    box-shadow:
+      0 -4px 0 0 #fff2a8,                     /* top highlight */
+      0 -8px 0 0 var(--accent-dark),          /* outer top */
+      4px 0 0 0 var(--accent-dark),           /* right */
+      8px 0 0 0 var(--accent-darker),
+      0 4px 0 0 var(--accent-dark),           /* bottom step 1 */
+      0 8px 0 0 var(--accent-darker),         /* bottom step 2 */
+      -4px 0 0 0 var(--accent-dark),          /* left */
+      -8px 0 0 0 var(--accent-darker),
+      0 12px 0 0 #000;                        /* drop shadow */
+    transition: transform .08s steps(2), box-shadow .08s steps(2);
+    text-shadow: 2px 2px 0 #fff2a8;
+  }
+  .btn-pixel::before,
+  .btn-pixel::after {
+    content: '';
+    position: absolute;
+    background: #fff2a8;
+    pointer-events: none;
+  }
+  /* Inner top-left highlight pixels */
+  .btn-pixel::before {
+    top: 4px; left: 4px;
+    width: 14px; height: 4px;
+    box-shadow: 0 4px 0 0 #fff2a8;
+  }
+  /* Inner bottom-right shadow pixels */
+  .btn-pixel::after {
+    bottom: 4px; right: 4px;
+    width: 14px; height: 4px;
+    background: var(--accent-darker);
+    box-shadow: 0 -4px 0 0 var(--accent-darker);
+  }
+  .btn-pixel:hover { transform: translateY(-2px); }
+  .btn-pixel:active {
+    transform: translateY(6px);
+    box-shadow:
+      0 -4px 0 0 #fff2a8,
+      0 -8px 0 0 var(--accent-dark),
+      4px 0 0 0 var(--accent-dark),
+      8px 0 0 0 var(--accent-darker),
+      0 2px 0 0 var(--accent-dark),
+      0 4px 0 0 var(--accent-darker),
+      -4px 0 0 0 var(--accent-dark),
+      -8px 0 0 0 var(--accent-darker),
+      0 6px 0 0 #000;
+  }
+
+  .hint {
+    font-size: 11px;
+    line-height: 1.7;
+    color: #ffe9a8;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .title-shadow {
+    font-size: 12px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    margin-top: -10px;
+  }
+
+  /* HUD — top corners + center logo */
+  #hud {
+    position: absolute;
+    top: 18px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+    z-index: 5;
+    font-size: 14px;
+    padding: 0 24px;
+    text-shadow: 2px 2px 0 #000, 3px 3px 0 rgba(0,0,0,.4);
+  }
+  #hud.hidden { display: none; }
+  #hud .pill {
+    background: rgba(0,0,0,.45);
+    padding: 10px 16px;
+    border-radius: 4px;
+    border: 3px solid #ffe9a8;
+    box-shadow: 0 4px 0 #000;
+    line-height: 1.3;
+  }
+  #hud .pill .label { font-size: 9px; color: #ffe9a8; display: block; margin-bottom: 4px; letter-spacing: 1px; }
+  #hud .pill .num   { font-size: 18px; color: #fff; }
+
+  #hudLogo {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(20vw, 130px);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    filter: drop-shadow(0 3px 0 rgba(0,0,0,.5));
+    z-index: 5;
+    pointer-events: none;
+    animation: hudbob 2.4s ease-in-out infinite;
+  }
+  #hudLogo.hidden { display: none; }
+
+  /* Mute button — pixel chip in the corner */
+  #muteBtn {
+    position: absolute;
+    bottom: 18px;
+    right: 18px;
+    z-index: 20;
+    appearance: none;
+    border: none;
+    cursor: pointer;
+    background: rgba(0,0,0,.55);
+    color: #ffe9a8;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 10px 14px;
+    border: 3px solid #ffe9a8;
+    box-shadow: 0 4px 0 #000;
+    text-shadow: 1px 1px 0 #000;
+    transition: transform .08s steps(2);
+  }
+  #muteBtn:hover { transform: translateY(-2px); }
+  #muteBtn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; }
+  @keyframes hudbob {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%     { transform: translateX(-50%) translateY(-4px); }
+  }
+
+  /* GAME OVER */
+  .gameover-title {
+    font-size: 32px;
+    color: #ff5050;
+    text-shadow: 3px 3px 0 #000, 6px 6px 0 rgba(0,0,0,.4);
+    letter-spacing: 3px;
+  }
+  .summary-card {
+    background: rgba(0,0,0,.55);
+    border: 4px solid #ffe9a8;
+    box-shadow: 0 6px 0 #000;
+    padding: 22px 32px;
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 10px 28px;
+    font-size: 14px;
+    color: #fff;
+    text-align: left;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .summary-card .k { color: #ffe9a8; }
+  .summary-card .v { color: #fff; font-size: 16px; }
+  .summary-card .total {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 3px dashed rgba(255,233,168,0.5);
+    text-align: center;
+    font-size: 18px;
+    color: #ffd84a;
+  }
+  .end-msg {
+    font-size: 12px;
+    color: #ffd84a;
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 600px) {
+    .hint { font-size: 10px; }
+    #hud { font-size: 11px; top: 10px; padding: 0 10px; }
+    #hud .pill .num { font-size: 14px; }
+    #hudLogo { width: 90px; }
+    .gameover-title { font-size: 22px; }
+    .btn-pixel { font-size: 14px; padding: 14px 24px; }
+    .summary-card { font-size: 11px; padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="960" height="540"></canvas>
+
+    <!-- IN-GAME CENTERED LOGO -->
+    <img id="hudLogo" class="hidden" src="logo.png" alt="" />
+
+    <!-- BACKGROUND MUSIC -->
+    <audio id="bgm" src="hardstyle crazy cringe meme, energetic.mp3" loop preload="auto"></audio>
+
+    <!-- MUTE TOGGLE -->
+    <button id="muteBtn" type="button">🔊 SOUND ON</button>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="pill"><span class="label">SCORE</span><span class="num" id="score">0</span></div>
+      <div class="pill"><span class="label">COINS</span><span class="num" id="coins">0</span></div>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="menu" class="overlay">
+      <img class="logo" src="logo.png" alt="TJ Suplex Run" />
+      <div class="title-shadow">RUN. JUMP. COLLECT.</div>
+      <button id="playBtn" class="btn-pixel">▶ PLAY</button>
+      <div class="hint">
+        SPACE / ↑ / TAP &nbsp;to jump<br/>
+        Avoid obstacles &middot; Grab the coins
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="gameover" class="overlay hidden">
+      <div class="gameover-title">GAME OVER</div>
+      <div class="summary-card">
+        <span class="k">Distance</span><span class="v" id="finalDistance">0</span>
+        <span class="k">Coins</span><span class="v" id="finalCoins">0</span>
+        <span class="k">Coin Bonus</span><span class="v" id="finalBonus">0</span>
+        <span class="total">TOTAL SCORE: <span id="finalScore">0</span></span>
+      </div>
+      <div class="end-msg" id="endMsg">Nice run!</div>
+      <button id="retryBtn" class="btn-pixel">↻ RETRY</button>
+      <div class="hint">Press SPACE to play again</div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
