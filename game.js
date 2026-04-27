@@ -2460,10 +2460,17 @@
 
   // ---------- STATE TRANSITIONS ----------
   // ---------- SCOREBOARD ----------
-  const SCOREBOARD_KEY   = 'tjGameScoreboardV1';
+  // Shared global leaderboard via Supabase REST. Falls back to localStorage
+  // if the network/server is unreachable so the menu still renders.
+  const SUPABASE_URL  = 'https://mlcbpcjlydukdbkulgod.supabase.co';
+  const SUPABASE_KEY  = 'sb_publishable_W-tBNovLGKqyim1ZD3FiHA_y-x2Px3W';
+  const SCOREBOARD_KEY   = 'tjGameScoreboardV1';   // localStorage cache key
   const SCOREBOARD_LIMIT = 10;
 
-  function loadScoreboard() {
+  // In-memory cache (populated by fetchRemoteScores; mirrored to localStorage)
+  let cachedScores = [];
+
+  function loadScoreboardLocal() {
     try {
       const raw = localStorage.getItem(SCOREBOARD_KEY);
       if (!raw) return [];
@@ -2472,28 +2479,76 @@
       return arr.filter(e => e && typeof e.name === 'string' && typeof e.score === 'number');
     } catch (e) { return []; }
   }
-  function saveScoreboard(scores) {
-    try { localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(scores)); }
-    catch (e) { /* storage unavailable — silently no-op */ }
+  function saveScoreboardLocal(scores) {
+    try { localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(scores)); } catch (e) {}
   }
+  // Sync getter — used by qualifiesForScoreboard etc. Always returns the
+  // latest fetched data (or local fallback).
+  function loadScoreboard() {
+    return cachedScores.length ? cachedScores : loadScoreboardLocal();
+  }
+
+  // Fetch top 10 from Supabase and re-render.
+  async function fetchRemoteScores() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/scores?select=name,score,coins,created_at&order=score.desc&limit=${SCOREBOARD_LIMIT}`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const rows = await res.json();
+      cachedScores = (Array.isArray(rows) ? rows : []).map(r => ({
+        name:  r.name,
+        score: r.score,
+        coins: r.coins || 0,
+        date:  r.created_at,
+      }));
+      saveScoreboardLocal(cachedScores);   // mirror as offline fallback
+    } catch (e) {
+      console.warn('[scoreboard] remote fetch failed, using local cache', e);
+      cachedScores = loadScoreboardLocal();
+    }
+    renderScoreboard();
+  }
+
+  // POST a new score to Supabase. Returns true on success.
+  async function pushRemoteScore(name, score, coins) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({ name, score, coins }),
+      });
+      return res.ok;
+    } catch (e) { return false; }
+  }
+
   function qualifiesForScoreboard(s) {
     if (s <= 0) return false;
     const scores = loadScoreboard();
     if (scores.length < SCOREBOARD_LIMIT) return true;
     return s > scores[scores.length - 1].score;
   }
-  function addToScoreboard(name, sc, coins) {
-    const scores = loadScoreboard();
-    scores.push({
-      name: String(name).slice(0, 10),
-      score: sc,
-      coins: coins,
-      date: new Date().toISOString(),
-    });
-    scores.sort((a, b) => b.score - a.score);
-    if (scores.length > SCOREBOARD_LIMIT) scores.length = SCOREBOARD_LIMIT;
-    saveScoreboard(scores);
+
+  // Save score: optimistic local insert (instant UI update), then push to
+  // Supabase, then re-fetch the authoritative top-10.
+  async function addToScoreboard(name, sc, coins) {
+    const entry = { name: String(name).slice(0, 16), score: sc, coins, date: new Date().toISOString() };
+    cachedScores.push(entry);
+    cachedScores.sort((a, b) => b.score - a.score);
+    if (cachedScores.length > SCOREBOARD_LIMIT) cachedScores.length = SCOREBOARD_LIMIT;
+    saveScoreboardLocal(cachedScores);
+    renderScoreboard();
+    const ok = await pushRemoteScore(entry.name, entry.score, entry.coins);
+    if (ok) await fetchRemoteScores();   // sync with server's view
+    return ok;
   }
+
   function renderScoreboard() {
     const list = document.getElementById('scoreboardList');
     if (!list) return;
@@ -2661,19 +2716,18 @@
     nicknameInputEl.addEventListener('keyup',   (e) => e.stopPropagation());
   }
 
-  function submitHighScore() {
+  async function submitHighScore() {
     if (!nicknameInputEl) return;
     let name = (nicknameInputEl.value || '').toUpperCase();
-    // strip everything except letters / numbers / space / dash / underscore
     name = name.replace(/[^A-Z0-9 _-]/g, '').trim().slice(0, 10);
     if (!name) name = 'PLAYER';
-    addToScoreboard(name, score, coinsCollected);
-    if (highScoreEntryEl) highScoreEntryEl.classList.add('hidden');
-    renderScoreboard();          // refresh menu list for next visit
     if (saveScoreBtn) {
-      saveScoreBtn.textContent = '✓ SAVED';
+      saveScoreBtn.textContent = 'SAVING…';
       saveScoreBtn.disabled = true;
     }
+    const ok = await addToScoreboard(name, score, coinsCollected);
+    if (highScoreEntryEl) highScoreEntryEl.classList.add('hidden');
+    if (saveScoreBtn) saveScoreBtn.textContent = ok ? '✓ SAVED' : '⚠ SAVED LOCALLY';
   }
 
   function returnToMenu() {
@@ -2687,8 +2741,7 @@
     hudLogoEl.classList.add('hidden');
     if (jumpBtn) jumpBtn.classList.add('hidden');
     resetWorld();
-    renderScoreboard();
-    // Reset save button state for next game-over
+    fetchRemoteScores();        // pull latest leaderboard from server
     if (saveScoreBtn) {
       saveScoreBtn.textContent = 'SAVE';
       saveScoreBtn.disabled = false;
@@ -2806,7 +2859,7 @@
   ]).then(() => {
     resetWorld();
     updateLivesHud(false);   // populate menu-state HUD pre-emptively
-    renderScoreboard();      // populate leaderboard on the main menu
+    fetchRemoteScores();     // load shared leaderboard from Supabase
     requestAnimationFrame(loop);
   }).catch(err => {
     console.error(err);
