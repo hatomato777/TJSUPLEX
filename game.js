@@ -5,6 +5,32 @@
 (() => {
   'use strict';
 
+  // ---------- TELEGRAM MINI APP INTEGRATION ----------
+  // When run inside Telegram, Telegram's WebApp SDK injects
+  // window.Telegram.WebApp. Outside Telegram (regular browser) it's null
+  // and we silently fall back to the standard nickname-input flow.
+  const TG       = (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp)
+                    ? window.Telegram.WebApp : null;
+  const TG_USER  = (TG && TG.initDataUnsafe && TG.initDataUnsafe.user) ? TG.initDataUnsafe.user : null;
+  const inTelegram = !!TG;
+  if (TG) {
+    try {
+      TG.ready();
+      TG.expand();                  // use full modal height
+      // Match the game's dark navy panel so the WebView chrome blends in
+      if (TG.setHeaderColor)     TG.setHeaderColor('#0e1628');
+      if (TG.setBackgroundColor) TG.setBackgroundColor('#0e1628');
+    } catch (e) { /* ignore — older Telegram clients may miss some methods */ }
+  }
+  // Returns the player's Telegram name (username preferred, full name fallback)
+  // or null if not running in Telegram / no user info.
+  function getTelegramName() {
+    if (!TG_USER) return null;
+    if (TG_USER.username) return TG_USER.username.toUpperCase().slice(0, 16);
+    const full = ((TG_USER.first_name || '') + ' ' + (TG_USER.last_name || '')).trim();
+    return full ? full.toUpperCase().slice(0, 16) : null;
+  }
+
   // ---------- CANVAS ----------
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
@@ -2816,7 +2842,12 @@
           saveScoreBtn.textContent = 'SAVE';
           saveScoreBtn.disabled = false;
         }
-        if (nicknameInputEl) nicknameInputEl.value = '';
+        if (nicknameInputEl) {
+          // Auto-fill from Telegram username when running as a Mini App,
+          // so players don't have to type their own name.
+          const tgName = getTelegramName();
+          nicknameInputEl.value = tgName || '';
+        }
       } else {
         highScoreEntryEl.classList.add('hidden');
       }
