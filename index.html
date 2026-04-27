@@ -606,12 +606,17 @@
     #stage {
       align-items: flex-start;
       padding-top: 100px;
+      /* Sky-blue above the canvas, fades quickly to PURE BLACK below it so
+         the in-game void at the canvas bottom flows into the area where the
+         JUMP button sits without any visible seam. */
       background: linear-gradient(
         to bottom,
-        #7cb6e8  0%,
-        #94c4ec  12%,
-        #1a2b4a  55%,
-        #0a0f1f  100%
+        #7cb6e8  0%,        /* matches canvas top sky band */
+        #94c4ec  12%,       /* still sky just above canvas */
+        #1a2540  32%,       /* matches canvas drawVoid top color */
+        #04060c  48%,       /* matches canvas drawVoid bottom color */
+        #000000  60%,
+        #000000  100%       /* pure black under JUMP button */
       );
     }
     canvas {
