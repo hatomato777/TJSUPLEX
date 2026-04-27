@@ -257,13 +257,14 @@
   }
   #hudLogo.hidden { display: none; }
 
-  /* MOBILE JUMP BUTTON — only shown in portrait orientation AND while playing */
+  /* MOBILE JUMP BUTTON — only shown in portrait orientation AND while playing.
+     Sized big for thumbs: ~70vw wide, chunky vertical padding. */
   #jumpBtn.hidden { display: none !important; }
   #jumpBtn {
-    display: none;  /* shown via media query (and only when not .hidden) */
+    display: none;          /* shown via media query (and only when not .hidden) */
     position: fixed;
     left: 50%;
-    bottom: 18px;
+    bottom: 28px;
     transform: translateX(-50%);
     z-index: 30;
     appearance: none;
@@ -272,9 +273,12 @@
     background: var(--accent);
     color: var(--accent-text);
     font-family: inherit;
-    font-size: 22px;
-    letter-spacing: 3px;
-    padding: 22px 64px;
+    font-size: 28px;
+    letter-spacing: 4px;
+    padding: 32px 0;        /* vertical only — width comes from min-width below */
+    min-width: 70vw;
+    max-width: 420px;
+    text-align: center;
     text-transform: uppercase;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -589,29 +593,34 @@
   @media (orientation: portrait) and (max-width: 900px) {
     #stage {
       align-items: flex-start;
-      padding-top: 100px;                   /* push canvas down so sky is visible above */
+      padding-top: 100px;
       background: linear-gradient(
         to bottom,
-        #7cb6e8  0%,                        /* matches canvas top sky band */
+        #7cb6e8  0%,
         #94c4ec  12%,
-        #1a2b4a  55%,                       /* fade to dark below canvas */
+        #1a2b4a  55%,
         #0a0f1f  100%
       );
     }
     canvas {
       width: 100%;
-      max-height: calc(100vh - 260px);     /* 100 top padding + 160 reserved for JUMP */
+      max-height: calc(100vh - 320px);     /* 100 top + ~220 reserved for JUMP */
       height: auto;
     }
     #jumpBtn { display: inline-block; }
     #muteBtn { bottom: auto; top: 12px; right: 12px; }
-    .overlay { padding-bottom: 170px; }
+    .overlay { padding-bottom: 220px; }
   }
   @media (orientation: portrait) and (max-width: 900px) and (max-height: 720px) {
-    #stage { padding-top: 70px; }           /* less top padding on shorter phones */
-    #jumpBtn { font-size: 18px; padding: 16px 48px; bottom: 14px; }
-    canvas { max-height: calc(100vh - 210px); }
-    .overlay { padding-bottom: 140px; }
+    #stage { padding-top: 70px; }
+    #jumpBtn {
+      font-size: 22px;
+      padding: 24px 0;
+      min-width: 76vw;
+      bottom: 20px;
+    }
+    canvas { max-height: calc(100vh - 250px); }
+    .overlay { padding-bottom: 180px; }
   }
 </style>
 </head>
