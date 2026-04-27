@@ -2699,7 +2699,10 @@
     if (tomatoSfxEl)      tomatoSfxEl.muted      = m;
     if (arcticReadySfxEl) arcticReadySfxEl.muted = m;
     if (gameOverSfxEl)    gameOverSfxEl.muted    = m;
-    muteBtn.textContent = m ? '🔇' : '🔊';
+    // Flat SVG speaker icons — `currentColor` picks up the button's color.
+    const ICON_ON  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" shape-rendering="geometricPrecision"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+    const ICON_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" shape-rendering="geometricPrecision"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="22" y1="9"  x2="16" y2="15"/><line x1="16" y1="9"  x2="22" y2="15"/></svg>`;
+    muteBtn.innerHTML = m ? ICON_OFF : ICON_ON;
     muteBtn.classList.toggle('muted', m);
     muteBtn.setAttribute('aria-label', m ? 'Sound off — tap to enable' : 'Sound on — tap to mute');
     if (m) {

@@ -310,7 +310,7 @@
       0 6px 0 0 #000;
   }
 
-  /* Mute button — square icon-only chip in the corner */
+  /* Mute button — square icon-only chip with a flat SVG speaker glyph */
   #muteBtn {
     position: absolute;
     bottom: 18px;
@@ -323,12 +323,8 @@
     cursor: pointer;
     background: rgba(14, 22, 40, 0.78);
     color: var(--accent-light);
-    font-family: inherit;
-    font-size: 22px;
-    line-height: 1;
     border: 3px solid var(--accent);
     box-shadow: 0 4px 0 #000;
-    text-shadow: 1px 1px 0 #000;
     transition: transform .08s steps(2);
     display: flex;
     align-items: center;
@@ -336,13 +332,20 @@
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
+  #muteBtn svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+    /* Sharper edges at small sizes */
+    shape-rendering: geometricPrecision;
+  }
   #muteBtn:hover { transform: translateY(-2px); }
   #muteBtn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; }
-  /* Slightly fade when muted so the OFF state reads at a glance */
+  /* Dim the icon + chip when muted so the OFF state reads at a glance */
   #muteBtn.muted { background: rgba(14, 22, 40, 0.55); color: rgba(184, 220, 246, 0.55); }
-  /* Tighter on small phones */
   @media (max-width: 600px) {
-    #muteBtn { width: 42px; height: 42px; font-size: 19px; bottom: 14px; right: 14px; }
+    #muteBtn { width: 42px; height: 42px; bottom: 14px; right: 14px; }
+    #muteBtn svg { width: 19px; height: 19px; }
   }
   @keyframes hudbob {
     0%,100% { transform: translateX(-50%) translateY(0); }
@@ -663,8 +666,16 @@
     <!-- GAME OVER STING -->
     <audio id="gameOverSfx" src="game over.mp3" preload="auto"></audio>
 
-    <!-- MUTE TOGGLE -->
-    <button id="muteBtn" type="button" aria-label="Toggle sound">🔊</button>
+    <!-- MUTE TOGGLE — flat SVG speaker icon (swapped by JS for muted state) -->
+    <button id="muteBtn" type="button" aria-label="Toggle sound">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+           stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    </button>
 
     <!-- MOBILE JUMP (portrait only — CSS controls visibility) -->
     <button id="jumpBtn" class="hidden" type="button" aria-label="Jump">▲ JUMP</button>
