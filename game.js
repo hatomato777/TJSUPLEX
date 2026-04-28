@@ -1026,10 +1026,17 @@
     obstacles = obstacles.filter(o => o.x + o.w > -10);
 
     // --- Shooter logic: tick fire timer, spawn fire bolts when ready ---
+    // SAFE_SPAWN_GAP: shooter must be at least this far to the right of the
+    // player's right edge before it's allowed to fire. Prevents the bolt
+    // from spawning inside the player's hitbox when the shooter is sliding
+    // past, which used to cause "phantom" life loss with no visible impact.
+    const SAFE_SPAWN_GAP = 60;
     for (const o of obstacles) {
       if (o.type !== 'shooter' || o.fireTimer === undefined) continue;
-      // Only shoot when on screen and player hasn't passed it yet
+      // Only shoot when on screen
       if (o.x > W + 30) continue;
+      // Don't fire when there's no safe room between the muzzle and the player.
+      if (o.x < player.x + player.w + SAFE_SPAWN_GAP) continue;
       o.fireTimer--;
       if (o.fireTimer <= 0) {
         // Spawn a fire bolt at the muzzle (top-left of shooter, where the cannon is)
@@ -1187,6 +1194,16 @@
       for (const c of coins)          { c.x      -= shift; }
       for (const t of tomatoes)       { t.x      -= shift; }
       lastGroundEndX -= shift;
+    }
+
+    // Clear active fire bolts and reset shooter cooldowns. Without this, a
+    // bolt mid-flight (or a shooter about to fire) could land in or near the
+    // newly-aligned player position and register a phantom hit.
+    fireBolts = [];
+    for (const o of obstacles) {
+      if (o.type === 'shooter' && o.fireTimer !== undefined) {
+        o.fireTimer = 60 + Math.random() * 50;
+      }
     }
 
     // Drop the player from above so they land softly on the new ground
@@ -1710,6 +1727,10 @@
     const lW = TRAP.acidLeftW,  lH = TRAP.acidLeftH;
     const mW = TRAP.acidBlockW, mH = TRAP.acidBlockH;
     const rW = TRAP.acidRightW, rH = TRAP.acidRightH;
+    // Safety: if the cached tile width is 0 (asset loaded with bad dimensions
+    // or cache wasn't refreshed), the inner `while (x < innerEnd)` loop below
+    // would never advance. Bail out instead of freezing the game.
+    if (mW < 1 || lW < 1 || rW < 1) return;
     // Acid surface sits a few px above GROUND_Y so the left/right tiles
     // visually wrap up onto the cliff edges.
     const surfaceY = GROUND_Y - PX;
@@ -2288,6 +2309,8 @@
   }
 
   function drawGroundSegment(g) {
+    // Safety: bail if any tile dimension didn't get cached properly.
+    if (TILE.midW < 1 || TILE.leftW < 1 || TILE.rightW < 1) return;
     const top = GROUND_Y;
     const startX = Math.round(g.startX);
     const endX   = Math.round(g.endX);
@@ -2478,9 +2501,20 @@
   }
 
   // ---------- LOOP ----------
+  // Wrap update + draw in try/catch so a single thrown error in any one
+  // frame can't permanently kill the game loop (which would visually freeze
+  // the game). Errors get logged once; the next RAF still runs.
+  let _frameErrorLogged = false;
   function loop() {
-    update();
-    draw();
+    try {
+      update();
+      draw();
+    } catch (e) {
+      if (!_frameErrorLogged) {
+        console.error('[loop] frame error:', e);
+        _frameErrorLogged = true;       // avoid log-flood if it repeats
+      }
+    }
     requestAnimationFrame(loop);
   }
 
