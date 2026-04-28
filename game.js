@@ -2673,6 +2673,8 @@
     'hardstyle crazy cringe meme, energetic.mp3',
     'TEE-JAY DUNHEM.mp3',
     'Tomato Ham.mp3',
+    'Arc Chain.mp3',
+    'Mustache Like No Other.mp3',
   ];
   let trackIdx = 0;
 
@@ -2767,6 +2769,8 @@
     'hardstyle crazy cringe meme, energetic.mp3':  'HARDSTYLE',
     'TEE-JAY DUNHEM.mp3':                          'TEE-JAY DUNHEM',
     'Tomato Ham.mp3':                              'TOMATO HAM',
+    'Arc Chain.mp3':                               'ARC CHAIN',
+    'Mustache Like No Other.mp3':                  'MUSTACHE LIKE NO OTHER',
   };
   const MP_ICON_PLAY  = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7L8 5z"/></svg>';
   const MP_ICON_PAUSE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
