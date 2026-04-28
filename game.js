@@ -2760,6 +2760,66 @@
   const finalBonus    = document.getElementById('finalBonus');
   const endMsgEl      = document.getElementById('endMsg');
 
+  // ---------- MAIN MENU MUSIC PLAYER ----------
+  // Pretty display names mapped from filename
+  const TRACK_DISPLAY_NAMES = {
+    'DANHAM.mp3':                                  'DANHAM',
+    'hardstyle crazy cringe meme, energetic.mp3':  'HARDSTYLE',
+    'TEE-JAY DUNHEM.mp3':                          'TEE-JAY DUNHEM',
+    'Tomato Ham.mp3':                              'TOMATO HAM',
+  };
+  const MP_ICON_PLAY  = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7L8 5z"/></svg>';
+  const MP_ICON_PAUSE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
+
+  const mpPrevBtn   = document.getElementById('mpPrevBtn');
+  const mpPlayBtn   = document.getElementById('mpPlayBtn');
+  const mpNextBtn   = document.getElementById('mpNextBtn');
+  const mpTrackName = document.getElementById('mpTrackName');
+
+  function updateMusicPlayerUI() {
+    if (!mpTrackName || !mpPlayBtn) return;
+    const filename = PLAYLIST[trackIdx] || PLAYLIST[0];
+    mpTrackName.textContent = TRACK_DISPLAY_NAMES[filename] || filename.replace(/\.mp3$/i, '');
+    const playing = !bgmEl.paused && !bgmEl.ended;
+    mpPlayBtn.innerHTML = playing ? MP_ICON_PAUSE : MP_ICON_PLAY;
+    mpPlayBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  }
+  function mpTogglePlay() {
+    audio();                                  // unlock audio context on gesture
+    if (bgmEl.paused || bgmEl.ended) {
+      if (!bgmEl.src) loadTrack(trackIdx);
+      const p = bgmEl.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    } else {
+      bgmEl.pause();
+    }
+    updateMusicPlayerUI();
+  }
+  function mpNext() {
+    audio();
+    loadTrack((trackIdx + 1) % PLAYLIST.length);
+    bgmEl.currentTime = 0;
+    const p = bgmEl.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+    updateMusicPlayerUI();
+  }
+  function mpPrev() {
+    audio();
+    loadTrack((trackIdx - 1 + PLAYLIST.length) % PLAYLIST.length);
+    bgmEl.currentTime = 0;
+    const p = bgmEl.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+    updateMusicPlayerUI();
+  }
+  if (mpPlayBtn) mpPlayBtn.addEventListener('click', mpTogglePlay);
+  if (mpNextBtn) mpNextBtn.addEventListener('click', mpNext);
+  if (mpPrevBtn) mpPrevBtn.addEventListener('click', mpPrev);
+  // Keep the play/pause icon + track name in sync with bgm element events
+  bgmEl.addEventListener('play',     updateMusicPlayerUI);
+  bgmEl.addEventListener('pause',    updateMusicPlayerUI);
+  bgmEl.addEventListener('ended',    () => setTimeout(updateMusicPlayerUI, 80));
+  bgmEl.addEventListener('loadeddata', updateMusicPlayerUI);
+
   document.getElementById('playBtn').addEventListener('click', startGame);
   document.getElementById('retryBtn').addEventListener('click', startGame);
   document.getElementById('menuBtn').addEventListener('click', returnToMenu);
@@ -2808,6 +2868,7 @@
     if (jumpBtn) jumpBtn.classList.add('hidden');
     resetWorld();
     fetchRemoteScores();        // pull latest leaderboard from server
+    updateMusicPlayerUI();      // refresh menu music player widget
     if (saveScoreBtn) {
       saveScoreBtn.textContent = 'SAVE';
       saveScoreBtn.disabled = false;
@@ -2931,6 +2992,7 @@
     resetWorld();
     updateLivesHud(false);   // populate menu-state HUD pre-emptively
     fetchRemoteScores();     // load shared leaderboard from Supabase
+    updateMusicPlayerUI();   // populate menu music player widget
     requestAnimationFrame(loop);
   }).catch(err => {
     console.error(err);

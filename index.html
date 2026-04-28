@@ -519,6 +519,85 @@
     text-shadow: 1px 1px 0 #000;
   }
 
+  /* ===== MUSIC PLAYER (main menu) ===== */
+  .music-player {
+    background: rgba(14, 22, 40, 0.85);
+    border: 3px solid var(--accent);
+    box-shadow: 0 6px 0 #000, 0 0 0 3px var(--panel-glow);
+    padding: 12px 16px;
+    width: min(360px, 88vw);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  .music-player::before, .music-player::after {
+    content: ''; position: absolute;
+    width: 8px; height: 8px;
+    background: var(--accent-light);
+    top: -5px;
+  }
+  .music-player::before { left: -5px; }
+  .music-player::after  { right: -5px; }
+  .mp-now-playing {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 #000;
+    min-width: 0;
+  }
+  .mp-label {
+    color: #ffd84a;
+    flex-shrink: 0;
+  }
+  .mp-track-name {
+    color: #fff;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+  }
+  .mp-controls {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    align-items: center;
+  }
+  .mp-btn {
+    appearance: none;
+    border: 2px solid var(--accent);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(78, 160, 232, 0.15);
+    color: var(--accent-light);
+    box-shadow: 0 3px 0 #000;
+    transition: transform .08s steps(2), box-shadow .08s steps(2);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mp-btn:hover { transform: translateY(-2px); }
+  .mp-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+  .mp-btn-primary {
+    width: 52px;
+    height: 52px;
+    background: var(--accent);
+    color: var(--accent-text);
+    box-shadow: 0 4px 0 #000;
+  }
+  .mp-btn-primary:active { box-shadow: 0 1px 0 #000; }
+  .mp-btn svg {
+    display: block;
+    shape-rendering: geometricPrecision;
+  }
+
   /* ===== HIGH SCORE ENTRY (game over) ===== */
   .high-score-entry {
     margin: 4px 0 18px;
@@ -706,6 +785,25 @@
       <div class="hint">
         SPACE / ↑ / TAP &nbsp;to jump<br/>
         Avoid obstacles &middot; Grab the coins
+      </div>
+
+      <!-- Music player — listen to the soundtrack without playing -->
+      <div class="music-player" id="musicPlayer">
+        <div class="mp-now-playing">
+          <span class="mp-label">♪ NOW PLAYING</span>
+          <span class="mp-track-name" id="mpTrackName">DANHAM</span>
+        </div>
+        <div class="mp-controls">
+          <button id="mpPrevBtn" class="mp-btn" type="button" aria-label="Previous track">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/></svg>
+          </button>
+          <button id="mpPlayBtn" class="mp-btn mp-btn-primary" type="button" aria-label="Play">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7L8 5z"/></svg>
+          </button>
+          <button id="mpNextBtn" class="mp-btn" type="button" aria-label="Next track">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- Scoreboard -->
